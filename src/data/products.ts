@@ -122,6 +122,15 @@ export const products: Product[] = [
     description: 'Keep your clothes fresh and clean with this effective detergent.',
     stock: 20,
   },
+   {
+    id: '13',
+    name: 'Smokie',
+    price: 40,
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpNBzoMqb_tXXE0dkcFCeA-diONKyS5bhsMg&s',
+    category: 'snacks',
+    description: 'Quality beef sausage ',
+    stock: 20,
+  },
 ];
 
 export const getProductById = (id: string): Product | undefined => {

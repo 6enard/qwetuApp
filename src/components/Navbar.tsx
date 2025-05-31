@@ -33,15 +33,15 @@ const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <span className="text-xl font-bold text-blue-600">HostelHub</span>
+            <span className="text-xl font-bold text-orange-600">QWETUHub</span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <Link to="/" className="text-gray-700 hover:text-blue-600 font-medium">
+            <Link to="/" className="text-gray-700 hover:text-fuchsia-800 font-medium">
               Home
             </Link>
-            <Link to="/products" className="text-gray-700 hover:text-blue-600 font-medium">
+            <Link to="/products" className="text-gray-700 hover:text-fuchsia-800 font-medium">
               Products
             </Link>
           </nav>
@@ -49,13 +49,13 @@ const Navbar: React.FC = () => {
           {/* Desktop Right Section */}
           <div className="hidden md:flex items-center space-x-6">
             {/* Search */}
-            <Link to="/products" className="text-gray-700 hover:text-blue-600">
+            <Link to="/products" className="text-gray-700 hover:text-fuchsia-800">
               <Search size={20} />
             </Link>
             
             {/* Cart */}
             <Link to="/cart" className="relative">
-              <ShoppingCart className="text-gray-700 hover:text-blue-600" size={22} />
+              <ShoppingCart className="text-gray-700 hover:text-fuchsia-800" size={22} />
               {totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                   {totalItems}
@@ -90,23 +90,20 @@ const Navbar: React.FC = () => {
           <div className="container mx-auto px-4 py-3 space-y-3">
             <Link 
               to="/" 
-              className="block py-2 text-gray-700 hover:text-blue-600 font-medium"
+              className="block py-2 text-gray-700 hover:text-fuchsia-800 font-medium"
             >
               Home
             </Link>
             <Link 
               to="/products" 
-              className="block py-2 text-gray-700 hover:text-blue-600 font-medium"
+              className="block py-2 text-gray-700 hover:text-fuchsia-800 font-medium"
             >
               Products
             </Link>
             <div className="relative mt-3 mb-2">
-              <input 
-                type="text" 
-                placeholder="Search products..." 
-                className="w-full px-4 py-2 border rounded-lg"
-              />
-              <Search className="absolute right-3 top-2.5 text-gray-400" size={18} />
+              <Link to="/products" className="text-gray-700 hover:text-fuchsia-800">
+              <Search size={20} />
+            </Link>
             </div>
           </div>
         </div>
