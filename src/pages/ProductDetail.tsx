@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ShoppingCart, ArrowLeft } from 'lucide-react';
 import { getProductById, getProductsByCategory } from '../data/products';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext'; // ✅ Import AuthContext
 import ProductCard from '../components/ProductCard';
 import QuantitySelector from '../components/QuantitySelector';
 
@@ -11,9 +12,10 @@ const ProductDetail: React.FC = () => {
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
-  
+  const { user } = useAuth(); // ✅ Get current user
+
   const product = id ? getProductById(id) : null;
-  
+
   if (!product) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
@@ -27,30 +29,36 @@ const ProductDetail: React.FC = () => {
       </div>
     );
   }
-  
+
   const relatedProducts = getProductsByCategory(product.category)
     .filter(p => p.id !== product.id)
     .slice(0, 4);
-  
+
   const handleAddToCart = () => {
-    addItem(product, quantity);
+    if (!user) {
+      alert("Please sign in to add items to your cart.");
+      navigate("/login"); // ✅ Redirect to login if not authenticated
+      return;
+    }
+
+    addItem(product, quantity); // ✅ Only add if authenticated
   };
-  
+
   const handleIncreaseQuantity = () => {
     if (quantity < product.stock) {
       setQuantity(prevQty => prevQty + 1);
     }
   };
-  
+
   const handleDecreaseQuantity = () => {
     if (quantity > 1) {
       setQuantity(prevQty => prevQty - 1);
     }
   };
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Breadcrumb / Back */}
+      {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
         className="flex items-center text-gray-600 hover:text-blue-600 mb-6"
@@ -58,7 +66,7 @@ const ProductDetail: React.FC = () => {
         <ArrowLeft size={18} className="mr-2" />
         Back
       </button>
-      
+
       {/* Product Details */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -70,7 +78,7 @@ const ProductDetail: React.FC = () => {
               className="w-full h-full object-cover"
             />
           </div>
-          
+
           {/* Product Info */}
           <div className="p-6 md:p-8 flex flex-col">
             <div className="mb-2">
@@ -78,17 +86,17 @@ const ProductDetail: React.FC = () => {
                 {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
               </span>
             </div>
-            
+
             <h1 className="text-2xl md:text-3xl font-bold mb-3">{product.name}</h1>
-            
+
             <div className="text-2xl font-bold text-gray-900 mb-4">
               KES {product.price}
             </div>
-            
+
             <p className="text-gray-600 mb-6">
               {product.description}
             </p>
-            
+
             <div className="mb-4">
               <div className="flex items-center mb-2">
                 <span className="text-sm font-medium text-gray-700 mr-2">Availability:</span>
@@ -99,7 +107,7 @@ const ProductDetail: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="mt-auto">
               <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
                 <QuantitySelector
@@ -108,7 +116,7 @@ const ProductDetail: React.FC = () => {
                   onDecrease={handleDecreaseQuantity}
                   max={product.stock}
                 />
-                
+
                 <button
                   onClick={handleAddToCart}
                   disabled={product.stock === 0}
@@ -126,7 +134,7 @@ const ProductDetail: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Related Products */}
       {relatedProducts.length > 0 && (
         <div>
