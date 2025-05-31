@@ -14,11 +14,11 @@ const Home: React.FC = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-500 to-blue-700 text-white py-16">
+      <section className="bg-gradient-to-r from-fuchsia-500 to-fuchsia-700 text-white py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 animate-fade-in">
-              Hostel Supplies Delivered to Your Door
+              Everyday Supplies Delivered to Your Door
             </h1>
             <p className="text-xl mb-8 opacity-90 animate-slide-up">
               Get all your essentials delivered directly to your hostel room in minutes.
