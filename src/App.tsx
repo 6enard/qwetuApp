@@ -30,7 +30,7 @@ function App() {
           <Route path="login" element={<Login />} />
           <Route 
             path="admin" 
-            element={isAdmin ? <AdminDashboard /> : <Navigate to="/\" replace />} 
+            element={isAdmin ? <AdminDashboard /> : <Navigate to="/" replace />} 
           />
           <Route path="*" element={<NotFound />} />
         </Route>
