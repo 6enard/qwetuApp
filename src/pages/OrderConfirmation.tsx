@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Package, Clock, Home, Download } from 'lucide-react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 
 interface OrderData {
   items: Array<{
@@ -30,9 +31,18 @@ interface OrderData {
 const OrderConfirmation: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  // Redirect to login if user is not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/login', { state: { from: `/confirmation/${orderId}` } });
+    }
+  }, [user, loading, navigate, orderId]);
 
   useEffect(() => {
-    if (!orderId) return;
+    if (!orderId || !user) return;
 
     const unsubscribe = onSnapshot(doc(db, 'orders', orderId), (doc) => {
       if (doc.exists()) {
@@ -41,10 +51,14 @@ const OrderConfirmation: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, [orderId]);
+  }, [orderId, user]);
+
+  if (loading || !user) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   if (!orderData) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading order details...</div>;
   }
 
   const getStepNumber = (status: string) => {
