@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, onSnapshot, doc, updateDoc, orderBy } from 'firebase/firestore';
+import { collection, query, onSnapshot, doc, updateDoc, orderBy, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Package, Truck, CheckCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Package, Truck, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -24,9 +26,23 @@ interface Order {
 const AdminDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
+  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+    if (!isAdmin) {
+      navigate('/');
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const q = query(
+      collection(db, 'orders'),
+      where('createdAt', '>=', today.toISOString()),
+      orderBy('createdAt', 'desc')
+    );
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const orderData: Order[] = [];
@@ -37,7 +53,7 @@ const AdminDashboard: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isAdmin, navigate]);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
@@ -84,6 +100,10 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  if (!isAdmin) {
+    return null;
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
@@ -93,37 +113,53 @@ const AdminDashboard: React.FC = () => {
         <div className="lg:col-span-2">
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="p-6">
-              <h2 className="text-xl font-bold mb-4">Recent Orders</h2>
+              <h2 className="text-xl font-bold mb-4">Today's Orders</h2>
               
-              <div className="space-y-4">
-                {orders.map((order) => (
-                  <div
-                    key={order.id}
-                    className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                      selectedOrder === order.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
-                    }`}
-                    onClick={() => setSelectedOrder(order.id)}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="font-medium">Order #{order.id}</h3>
-                        <p className="text-sm text-gray-600">
-                          {new Date(order.createdAt).toLocaleString()}
-                        </p>
+              {orders.length === 0 ? (
+                <div className="text-center py-8">
+                  <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
+                  <p className="text-gray-600">No orders for today yet</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {orders.map((order) => (
+                    <div
+                      key={order.id}
+                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                        selectedOrder === order.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
+                      }`}
+                      onClick={() => setSelectedOrder(order.id)}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-medium">Order #{order.id.slice(-6)}</h3>
+                          <p className="text-sm text-gray-600">
+                            {new Date(order.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <span className={`badge ${getStatusBadgeColor(order.trackingStatus)}`}>
+                          {order.trackingStatus.replace('_', ' ').toUpperCase()}
+                        </span>
                       </div>
-                      <span className={`badge ${getStatusBadgeColor(order.trackingStatus)}`}>
-                        {order.trackingStatus.replace('_', ' ').toUpperCase()}
-                      </span>
+                      
+                      <div className="text-sm text-gray-600">
+                        <p>{order.customerInfo.name}</p>
+                        <p>Room {order.customerInfo.roomNumber}, {order.customerInfo.hostel}</p>
+                        <p className="font-medium mt-1">KES {order.totalAmount}</p>
+                      </div>
+
+                      <div className="mt-2 text-sm">
+                        <p className="font-medium">Items:</p>
+                        {order.items.map((item, index) => (
+                          <p key={index} className="text-gray-600">
+                            {item.quantity}x {item.name}
+                          </p>
+                        ))}
+                      </div>
                     </div>
-                    
-                    <div className="text-sm text-gray-600">
-                      <p>{order.customerInfo.name}</p>
-                      <p>Room {order.customerInfo.roomNumber}, {order.customerInfo.hostel}</p>
-                      <p className="font-medium mt-1">KES {order.totalAmount}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

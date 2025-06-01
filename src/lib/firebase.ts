@@ -1,7 +1,5 @@
 // firebase.ts
-
 import { initializeApp } from "firebase/app";
-import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 
@@ -23,7 +21,7 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Initialize Firestore
+// Initialize Firestore with offline persistence
 export const db = getFirestore(app);
 
 // Enable offline persistence
@@ -35,12 +33,5 @@ enableIndexedDbPersistence(db).catch((err) => {
   }
 });
 
-// Lazy-load Analytics only if supported
-let analytics: ReturnType<typeof getAnalytics> | null = null;
-(async () => {
-  if (await isSupported()) {
-    analytics = getAnalytics(app);
-  }
-})();
-
-export { analytics };
+// Admin email configuration
+export const ADMIN_EMAIL = '6enard@gmail.com';

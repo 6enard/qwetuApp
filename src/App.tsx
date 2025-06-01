@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import ProductsPage from './pages/ProductsPage';
@@ -11,8 +11,11 @@ import NotFound from './pages/NotFound';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import ScrollToTop from './components/ScrollToTop';
+import { useAuth } from './context/AuthContext';
 
 function App() {
+  const { isAdmin } = useAuth();
+
   return (
     <>
       <ScrollToTop />
@@ -25,7 +28,10 @@ function App() {
           <Route path="checkout" element={<Checkout />} />
           <Route path="confirmation/:orderId" element={<OrderConfirmation />} />
           <Route path="login" element={<Login />} />
-          <Route path="admin" element={<AdminDashboard />} />
+          <Route 
+            path="admin" 
+            element={isAdmin ? <AdminDashboard /> : <Navigate to="/" replace />} 
+          />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
