@@ -46,13 +46,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
-        const cartDoc = await getDoc(doc(db, 'carts', user.uid));
+        const cartRef = doc(db, 'carts', user.uid);
+        const cartDoc = await getDoc(cartRef);
+        
         if (cartDoc.exists()) {
-          const cartData = cartDoc.data() as { items: CartItem[] };
+          const cartData = cartDoc.data();
           const { totalItems, totalPrice } = calculateTotals(cartData.items);
           setState({ items: cartData.items, totalItems, totalPrice });
-        } else {
-          setState({ items: [], totalItems: 0, totalPrice: 0 });
         }
       } catch (error) {
         console.error('Error loading cart:', error);
@@ -62,16 +62,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadCart();
   }, [user]);
 
-  // Save cart to Firestore whenever it changes
-  const saveCart = async (items: CartItem[]) => {
-    if (!user) return;
+  // Save cart to Firestore whenever items change
+  useEffect(() => {
+    const saveCart = async () => {
+      if (!user) return;
 
-    try {
-      await setDoc(doc(db, 'carts', user.uid), { items });
-    } catch (error) {
-      console.error('Error saving cart:', error);
+      try {
+        const cartRef = doc(db, 'carts', user.uid);
+        await setDoc(cartRef, { items: state.items }, { merge: true });
+      } catch (error) {
+        console.error('Error saving cart:', error);
+      }
+    };
+
+    if (user && state.items.length > 0) {
+      saveCart();
     }
-  };
+  }, [state.items, user]);
 
   const addItem = async (product: Product, quantity: number) => {
     if (!user) return;
@@ -94,7 +101,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { totalItems, totalPrice } = calculateTotals(updatedItems);
     setState({ items: updatedItems, totalItems, totalPrice });
-    await saveCart(updatedItems);
   };
 
   const removeItem = async (productId: string) => {
@@ -106,7 +112,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     const { totalItems, totalPrice } = calculateTotals(updatedItems);
     setState({ items: updatedItems, totalItems, totalPrice });
-    await saveCart(updatedItems);
   };
 
   const updateQuantity = async (productId: string, quantity: number) => {
@@ -125,7 +130,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     const { totalItems, totalPrice } = calculateTotals(updatedItems);
     setState({ items: updatedItems, totalItems, totalPrice });
-    await saveCart(updatedItems);
   };
 
   const clearCart = async () => {
