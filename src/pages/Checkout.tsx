@@ -35,7 +35,7 @@ const Checkout: React.FC = () => {
     try {
       // Create order in Firestore
       const orderRef = await addDoc(collection(db, 'orders'), {
-        userId: user?.uid,
+        userId: user?.uid, // Add userId to the order
         items: items.map(item => ({
           productId: item.product.id,
           name: item.product.name,

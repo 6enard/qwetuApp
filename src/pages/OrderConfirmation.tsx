@@ -26,39 +26,79 @@ interface OrderData {
     message: string;
   }>;
   createdAt: string;
+  userId: string; // Add userId to track order ownership
 }
 
 const OrderConfirmation: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { user, loading } = useAuth();
 
-  // Redirect to login if user is not authenticated
   useEffect(() => {
     if (!loading && !user) {
       navigate('/login', { state: { from: `/confirmation/${orderId}` } });
+      return;
     }
-  }, [user, loading, navigate, orderId]);
 
-  useEffect(() => {
     if (!orderId || !user) return;
 
-    const unsubscribe = onSnapshot(doc(db, 'orders', orderId), (doc) => {
-      if (doc.exists()) {
-        setOrderData(doc.data() as OrderData);
+    const unsubscribe = onSnapshot(
+      doc(db, 'orders', orderId),
+      (doc) => {
+        if (doc.exists()) {
+          const data = doc.data() as OrderData;
+          // Only set order data if the user owns the order or is an admin
+          if (data.userId === user.uid || user.email === '6enard@gmail.com') {
+            setOrderData(data);
+            setError(null);
+          } else {
+            setError('You do not have permission to view this order');
+            setOrderData(null);
+          }
+        } else {
+          setError('Order not found');
+          setOrderData(null);
+        }
+      },
+      (error) => {
+        console.error('Error fetching order:', error);
+        setError('Error loading order details');
+        setOrderData(null);
       }
-    });
+    );
 
     return () => unsubscribe();
-  }, [orderId, user]);
+  }, [orderId, user, loading, navigate]);
 
-  if (loading || !user) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-8">
+          {error}
+        </div>
+        <Link to="/" className="btn btn-primary">
+          Return to Home
+        </Link>
+      </div>
+    );
   }
 
   if (!orderData) {
-    return <div className="flex items-center justify-center min-h-screen">Loading order details...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
 
   const getStepNumber = (status: string) => {
