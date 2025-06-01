@@ -9,6 +9,7 @@ import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 import NotFound from './pages/NotFound';
 import Login from './pages/Login';
+import AdminDashboard from './pages/AdminDashboard';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
           <Route path="checkout" element={<Checkout />} />
           <Route path="confirmation/:orderId" element={<OrderConfirmation />} />
           <Route path="login" element={<Login />} />
+          <Route path="admin" element={<AdminDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

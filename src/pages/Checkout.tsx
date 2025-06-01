@@ -2,15 +2,19 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, Phone, User, Home } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { useAuth } from '../context/AuthContext';
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     roomNumber: '',
-    hostel: '',
+    hostel: 'Qwetu Ruaraka', // Default hostel
   });
   const [isProcessing, setIsProcessing] = useState(false);
   
@@ -24,20 +28,49 @@ const Checkout: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
     
-    // Simulate payment processing and order creation
-    setTimeout(() => {
-      // Generate a random order ID
-      const orderId = Math.random().toString(36).substring(2, 10).toUpperCase();
-      clearCart();
-      navigate(`/confirmation/${orderId}`);
-    }, 2000);
+    try {
+      // Create order in Firestore
+      const orderRef = await addDoc(collection(db, 'orders'), {
+        userId: user?.uid,
+        items: items.map(item => ({
+          productId: item.product.id,
+          name: item.product.name,
+          price: item.product.price,
+          quantity: item.quantity,
+          subtotal: item.product.price * item.quantity
+        })),
+        customerInfo: {
+          name: formData.name,
+          phone: formData.phone,
+          roomNumber: formData.roomNumber,
+          hostel: formData.hostel
+        },
+        status: 'pending',
+        trackingStatus: 'order_placed',
+        trackingUpdates: [{
+          status: 'order_placed',
+          timestamp: new Date().toISOString(),
+          message: 'Order has been placed successfully'
+        }],
+        totalAmount: totalPrice + 50, // Including delivery fee
+        createdAt: new Date().toISOString()
+      });
+
+      await clearCart();
+      navigate(`/confirmation/${orderRef.id}`);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert('Failed to process order. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
-  const isFormValid = formData.name && formData.phone && formData.roomNumber && formData.hostel;
+  const isFormValid = formData.name && formData.phone && formData.roomNumber;
   
   return (
     <div className="container mx-auto px-4 py-8">
@@ -110,10 +143,8 @@ const Checkout: React.FC = () => {
                         id="hostel"
                         name="hostel"
                         value={formData.hostel}
-                        onChange={handleChange}
-                        placeholder="Your hostel name"
-                        className="input pl-10"
-                        required
+                        readOnly
+                        className="input pl-10 bg-gray-50"
                       />
                     </div>
                   </div>
@@ -161,7 +192,7 @@ const Checkout: React.FC = () => {
               <h2 className="text-xl font-bold mb-4">Order Summary</h2>
               
               <div className="mb-4">
-                {items.slice(0, 3).map((item) => (
+                {items.map((item) => (
                   <div key={item.product.id} className="flex justify-between py-2">
                     <span className="text-gray-600">
                       {item.quantity} x {item.product.name}
@@ -169,12 +200,6 @@ const Checkout: React.FC = () => {
                     <span>KES {item.product.price * item.quantity}</span>
                   </div>
                 ))}
-                
-                {items.length > 3 && (
-                  <div className="text-sm text-gray-500 italic">
-                    + {items.length - 3} more items
-                  </div>
-                )}
               </div>
               
               <div className="space-y-3 mb-6 border-t pt-3">

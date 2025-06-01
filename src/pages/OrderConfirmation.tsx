@@ -1,28 +1,81 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { CheckCircle, Package, Clock, Home, Download } from 'lucide-react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+
+interface OrderData {
+  items: Array<{
+    name: string;
+    price: number;
+    quantity: number;
+    subtotal: number;
+  }>;
+  totalAmount: number;
+  customerInfo: {
+    name: string;
+    phone: string;
+    roomNumber: string;
+    hostel: string;
+  };
+  trackingStatus: string;
+  trackingUpdates: Array<{
+    status: string;
+    timestamp: string;
+    message: string;
+  }>;
+  createdAt: string;
+}
 
 const OrderConfirmation: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [orderData, setOrderData] = useState<OrderData | null>(null);
 
   useEffect(() => {
-    const timer1 = setTimeout(() => setCurrentStep(2), 3000);
-    const timer2 = setTimeout(() => setCurrentStep(3), 6000);
+    if (!orderId) return;
 
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
-  }, []);
+    const unsubscribe = onSnapshot(doc(db, 'orders', orderId), (doc) => {
+      if (doc.exists()) {
+        setOrderData(doc.data() as OrderData);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [orderId]);
+
+  if (!orderData) {
+    return <div>Loading...</div>;
+  }
+
+  const getStepNumber = (status: string) => {
+    const steps = ['order_placed', 'preparing', 'out_for_delivery', 'delivered'];
+    return steps.indexOf(status) + 1;
+  };
+
+  const currentStep = getStepNumber(orderData.trackingStatus);
 
   const generateReceipt = () => {
     const receipt = `
 QWETUHub Receipt
 -----------------
 Order #${orderId}
-Date: ${new Date().toLocaleDateString()}
-Time: ${new Date().toLocaleTimeString()}
+Date: ${new Date(orderData.createdAt).toLocaleDateString()}
+Time: ${new Date(orderData.createdAt).toLocaleTimeString()}
+
+Customer Information:
+Name: ${orderData.customerInfo.name}
+Phone: ${orderData.customerInfo.phone}
+Hostel: ${orderData.customerInfo.hostel}
+Room: ${orderData.customerInfo.roomNumber}
+
+Items:
+${orderData.items.map(item => 
+  `${item.name} x${item.quantity} @ KES ${item.price} = KES ${item.subtotal}`
+).join('\n')}
+
+Subtotal: KES ${orderData.totalAmount - 50}
+Delivery Fee: KES 50
+Total Amount: KES ${orderData.totalAmount}
 
 Thank you for shopping with QWETUHub!
 We appreciate your business and hope to serve you again soon.
@@ -44,15 +97,15 @@ Visit us at www.qwetuhub.com for more great deals!
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-10">
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-10 text-center">
+        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-10">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-green-600" />
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-center">
             Thank You for Your Order!
           </h1>
-          <p className="text-gray-600 mb-6 text-sm sm:text-base">
+          <p className="text-gray-600 mb-6 text-sm sm:text-base text-center">
             Your order <span className="font-semibold">#{orderId}</span> has been placed successfully.
           </p>
 
@@ -63,19 +116,20 @@ Visit us at www.qwetuhub.com for more great deals!
 
               <div
                 className="h-1 bg-green-500 absolute top-6 left-1/2 transform -translate-x-1/2 transition-all duration-1000 ease-out"
-                style={{ width: `${(currentStep - 1) * 40}%` }}
+                style={{ width: `${(currentStep - 1) * 33}%` }}
               ></div>
 
               <div className="flex justify-between relative px-2 sm:px-4">
                 {[
-                  { label: 'Confirmed', icon: <CheckCircle size={24} /> },
-                  { label: 'Preparing', icon: <Package size={24} /> },
-                  { label: 'Delivered', icon: <Home size={24} /> },
+                  { label: 'Confirmed', icon: <CheckCircle size={24} />, status: 'order_placed' },
+                  { label: 'Preparing', icon: <Package size={24} />, status: 'preparing' },
+                  { label: 'On the Way', icon: <Clock size={24} />, status: 'out_for_delivery' },
+                  { label: 'Delivered', icon: <Home size={24} />, status: 'delivered' }
                 ].map((step, i) => (
-                  <div key={i} className="flex flex-col items-center text-xs sm:text-sm w-1/3">
+                  <div key={i} className="flex flex-col items-center text-xs sm:text-sm w-1/4">
                     <div
                       className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-1 sm:mb-2 ${
-                        currentStep >= i + 1
+                        getStepNumber(orderData.trackingStatus) >= i + 1
                           ? 'bg-green-100 text-green-600'
                           : 'bg-gray-100 text-gray-400'
                       }`}
@@ -89,15 +143,22 @@ Visit us at www.qwetuhub.com for more great deals!
             </div>
           </div>
 
-          {/* Delivery Info */}
-          <div className="bg-blue-50 rounded-lg p-4 text-left mb-6">
-            <h3 className="font-medium text-blue-800 mb-2 flex items-center text-sm sm:text-base">
-              <Clock size={18} className="mr-2" />
-              Estimated Delivery Time
-            </h3>
-            <p className="text-blue-700 text-sm sm:text-base">
-              Your order will be delivered to your room in approximately 15–30 minutes.
-            </p>
+          {/* Tracking Updates */}
+          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <h3 className="font-medium text-gray-800 mb-3">Tracking Updates</h3>
+            <div className="space-y-3">
+              {orderData.trackingUpdates.map((update, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
+                  <div>
+                    <p className="text-sm text-gray-600">
+                      {new Date(update.timestamp).toLocaleString()}
+                    </p>
+                    <p className="text-sm font-medium">{update.message}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Download Receipt */}
