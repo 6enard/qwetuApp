@@ -1,18 +1,19 @@
 // firebase.ts
+
 import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 
-// Firebase config using environment variables
+// Firebase config
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyDEG7QnBG-Q7FsL4E4aB3EdV1k-QXaLxcs",
+  authDomain: "qwetu-eda5a.firebaseapp.com",
+  projectId: "qwetu-eda5a",
+  storageBucket: "qwetu-eda5a.appspot.com",
+  messagingSenderId: "483604997271",
+  appId: "1:483604997271:web:66a38835c644c0b91535d2",
+  measurementId: "G-74XWSY45GC",
 };
 
 // Initialize Firebase
