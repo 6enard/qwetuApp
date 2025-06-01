@@ -37,31 +37,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    setIsAdmin(result.user.email === ADMIN_EMAIL);
   };
 
   const signUp = async (email: string, password: string) => {
-    await createUserWithEmailAndPassword(auth, email, password);
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    setIsAdmin(result.user.email === ADMIN_EMAIL);
   };
 
   const signInWithGoogle = async () => {
-    await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(auth, googleProvider);
+    setIsAdmin(result.user.email === ADMIN_EMAIL);
   };
 
   const logout = async () => {
     await signOut(auth);
+    setIsAdmin(false);
+  };
+
+  const value = {
+    user,
+    loading,
+    isAdmin,
+    signIn,
+    signUp,
+    signInWithGoogle,
+    logout
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      isAdmin,
-      signIn,
-      signUp,
-      signInWithGoogle,
-      logout
-    }}>
+    <AuthContext.Provider value={value}>
       {!loading && children}
     </AuthContext.Provider>
   );

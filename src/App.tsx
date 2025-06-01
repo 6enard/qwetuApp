@@ -14,7 +14,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { useAuth } from './context/AuthContext';
 
 function App() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   return (
     <>
@@ -30,7 +30,11 @@ function App() {
           <Route path="login" element={<Login />} />
           <Route 
             path="admin" 
-            element={isAdmin ? <AdminDashboard /> : <Navigate to="/\" replace />} 
+            element={
+              !user ? <Navigate to="/login" replace /> :
+              isAdmin ? <AdminDashboard /> : 
+              <Navigate to="/" replace />
+            } 
           />
           <Route path="*" element={<NotFound />} />
         </Route>
