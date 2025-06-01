@@ -1,9 +1,7 @@
-// firebase.ts
-import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDEG7QnBG-Q7FsL4E4aB3EdV1k-QXaLxcs",
   authDomain: "qwetu-eda5a.firebaseapp.com",
@@ -14,24 +12,18 @@ const firebaseConfig = {
   measurementId: "G-74XWSY45GC",
 };
 
-// Initialize Firebase
 export const app = initializeApp(firebaseConfig);
-
-// Initialize Auth
 export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-
-// Initialize Firestore with offline persistence
 export const db = getFirestore(app);
+export const googleProvider = new GoogleAuthProvider();
 
 // Enable offline persistence
 enableIndexedDbPersistence(db).catch((err) => {
   if (err.code === 'failed-precondition') {
     console.warn('Multiple tabs open, persistence disabled');
   } else if (err.code === 'unimplemented') {
-    console.warn('Current browser doesn\'t support persistence');
+    console.warn('Browser doesn\'t support persistence');
   }
 });
 
-// Admin email configuration
 export const ADMIN_EMAIL = '6enard@gmail.com';
