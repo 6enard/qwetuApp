@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CheckCircle, Package, Clock, Home } from 'lucide-react';
+import { CheckCircle, Package, Clock, Home, Download } from 'lucide-react';
 
 const OrderConfirmation: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -16,6 +16,31 @@ const OrderConfirmation: React.FC = () => {
       clearTimeout(timer2);
     };
   }, []);
+
+  const generateReceipt = () => {
+    const receipt = `
+QWETUHub Receipt
+-----------------
+Order #${orderId}
+Date: ${new Date().toLocaleDateString()}
+Time: ${new Date().toLocaleTimeString()}
+
+Thank you for shopping with QWETUHub!
+We appreciate your business and hope to serve you again soon.
+
+Visit us at www.qwetuhub.com for more great deals!
+    `;
+
+    const blob = new Blob([receipt], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `QWETUHub-Receipt-${orderId}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
   
   return (
     <div className="container mx-auto px-4 py-8">
@@ -25,9 +50,9 @@ const OrderConfirmation: React.FC = () => {
             <CheckCircle size={32} className="text-green-600" />
           </div>
           
-          <h1 className="text-2xl font-bold mb-2">Order Confirmed!</h1>
+          <h1 className="text-2xl font-bold mb-2">Thank You for Your Order!</h1>
           <p className="text-gray-600 mb-6">
-            Your order #{orderId} has been placed successfully.
+            Your order #{orderId} has been placed successfully. We appreciate your business!
           </p>
           
           {/* Order Status */}
@@ -83,6 +108,15 @@ const OrderConfirmation: React.FC = () => {
               Your order will be delivered to your room in approximately 15-30 minutes.
             </p>
           </div>
+
+          {/* Download Receipt Button */}
+          <button
+            onClick={generateReceipt}
+            className="btn btn-secondary w-full mb-4 flex items-center justify-center gap-2"
+          >
+            <Download size={18} />
+            Download Receipt
+          </button>
           
           <div className="mt-8 space-x-4">
             <Link to="/" className="btn btn-primary">

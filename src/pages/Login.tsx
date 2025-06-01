@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,8 +9,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,19 +21,6 @@ const Login: React.FC = () => {
       navigate(-1);
     } catch (err) {
       setError('Failed to sign in. Please check your credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setError('');
-      setLoading(true);
-      await signInWithGoogle();
-      navigate(-1);
-    } catch (err) {
-      setError('Failed to sign in with Google.');
     } finally {
       setLoading(false);
     }
@@ -105,40 +91,19 @@ const Login: React.FC = () => {
             </div>
           </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn btn-primary w-full flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                'Signing in...'
-              ) : (
-                <>
-                  <LogIn size={18} />
-                  Sign in
-                </>
-              )}
-            </button>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
-            </div>
-          </div>
-
           <button
-            type="button"
-            onClick={handleGoogleSignIn}
+            type="submit"
             disabled={loading}
-            className="btn btn-secondary w-full flex items-center justify-center gap-2"
+            className="btn btn-primary w-full flex items-center justify-center gap-2"
           >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-            Sign in with Google
+            {loading ? (
+              'Signing in...'
+            ) : (
+              <>
+                <LogIn size={18} />
+                Sign in
+              </>
+            )}
           </button>
         </form>
       </div>
